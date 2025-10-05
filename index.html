@@ -1,0 +1,496 @@
+<!doctype html>
+
+<html lang="en">  
+<head>  
+<meta charset="utf-8"/>  
+<meta name="viewport" content="width=device-width,initial-scale=1"/>  
+<title>FortuneTicket — Win Big!!! (Feed + Tiered Leaderboard)</title>  
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;600;800&display=swap" rel="stylesheet">  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>  
+<style>  
+:root{--gold:#FFB800;--purple:#7C3AED}  
+*{box-sizing:border-box}  
+html,body{height:100%;margin:0;font-family:'Montserrat',system-ui,Roboto,-apple-system;background:transparent;color:#eaf6ff;-webkit-font-smoothing:antialiased}  
+#bgLayer{position:fixed;inset:0;z-index:-100;background-size:cover;background-position:center;filter:brightness(.92);transition:transform .6s}  /* layout */
+.wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:14px}
+.app{width:100%;max-width:1200px;border-radius:14px;padding:10px}
+.header{display:flex;align-items:center;gap:12px}
+.logo{width:56px;height:56px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--gold),#ffd773);box-shadow:0 6px 16px rgba(255,184,0,0.12)}
+.h1{margin:0}
+.small-note{font-size:12px;color:#cfeefc}
+.btn{padding:10px 12px;border-radius:10px;border:none;font-weight:800;cursor:pointer}
+.btn.primary{background:linear-gradient(135deg,var(--gold),#ffd773);color:#04121a}
+.btn.ghost{background:transparent;color:#eaf6ff;border:1px solid rgba(255,255,255,0.04)}
+.grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
+@media(min-width:980px){.grid{grid-template-columns:360px 1fr 320px}}
+.glass{background:rgba(255,255,255,0.04);backdrop-filter:blur(10px);border-radius:12px;border:1px solid rgba(255,255,255,0.06);box-shadow:0 8px 30px rgba(0,0,0,0.18);padding:12px}
+
+/* ticket grid */
+.ticket-grid{display:grid;grid-template-columns:repeat(20,1fr);gap:8px;padding:8px;overflow:auto;height:460px}
+@media(max-width:980px){.ticket-grid{grid-template-columns:repeat(10,1fr);height:320px}}
+.ticket{height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;background:linear-gradient(180deg,#ffffff,#dff8f4);color:#022;cursor:pointer;user-select:none;box-shadow:0 6px 12px rgba(0,0,0,0.28)}
+.ticket.taken{background:linear-gradient(180deg,#222a30,#12181b);color:#b9eaf0;cursor:default}
+
+/* splash */
+.splash{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:9998;pointer-events:none}
+.splash-inner{position:relative;width:92%;max-width:920px;height:360px;border-radius:18px;display:flex;align-items:center;justify-content:center;overflow:visible}
+.splash-word{position:absolute;font-weight:900;font-size:72px;opacity:0;pointer-events:none;text-transform:uppercase;letter-spacing:2px}
+.fortune{left:0;color:black;-webkit-background-clip:text;background:linear-gradient(90deg,var(--gold),#fff4b2); text-shadow:0 6px 28px rgba(255,184,0,0.12)}
+.ticket-word{right:0;color:white;-webkit-background-clip:text;background:linear-gradient(90deg,var(--purple),#bfa3ff); text-shadow:0 6px 28px rgba(124,58,237,0.12)}
+.splash-title{position:relative;z-index:5;font-weight:900;font-size:40px;color:purple;-webkit-background-clip:text;background:linear-gradient(90deg,var(--gold),var(--purple));opacity:0;letter-spacing:2px}
+
+/* confetti */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:9997}
+
+/* activity feed (top, centered narrow box) */
+.activity-wrap{position:fixed;left:50%;transform:translateX(-50%);top:10px;z-index:10000;width:92%;max-width:920px;pointer-events:none;display:flex;justify-content:center}
+.activity-feed{width:100%;max-width:920px;padding:10px 16px;border-radius:12px;backdrop-filter:blur(8px);background:linear-gradient(90deg, rgba(255,215,120,0.06), rgba(124,58,237,0.05));border:1px solid rgba(255,215,120,0.12);box-shadow:0 8px 30px rgba(0,0,0,0.18);display:flex;align-items:center;justify-content:center;pointer-events:auto;overflow:hidden}
+.activity-text{font-weight:700;font-size:15px;text-align:center;line-height:1.1;color:#fff;white-space:nowrap;max-width:100%;text-overflow:ellipsis;overflow:hidden}
+.activity-accent{background:linear-gradient(90deg,var(--gold),var(--purple));-webkit-background-clip:text;color:transparent;font-weight:900;padding-right:6px}
+@keyframes goldPulse {0%{box-shadow:0 0 10px rgba(255,215,0,0.18)}50%{box-shadow:0 0 30px rgba(255,215,0,0.36)}100%{box-shadow:0 0 10px rgba(255,215,0,0.18)}}
+.activity-feed { animation: none; border-radius:12px; }
+.activity-feed.pulse{ animation: goldPulse 3s infinite ease-in-out; }
+
+/* leaderboard tabs */
+.leaderboard-tabs{display:flex;gap:8px;margin-bottom:10px}
+.tab-btn{padding:8px 10px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:rgba(124,58,237,0.06);color:#eaf6ff;font-weight:800;cursor:pointer}
+.tab-btn.active{background:linear-gradient(135deg,var(--gold),#ffd773);color:#04121a;box-shadow:0 8px 30px rgba(255,184,0,0.14);transform:translateY(-2px)}
+.leaderboard .item{display:flex;justify-content:space-between;padding:8px;border-radius:8px;background:rgba(255,255,255,0.02);margin-bottom:8px}
+
+/* admin drawer */
+.admin-drawer{position:fixed;left:10px;right:10px;bottom:10px;border-radius:12px;z-index:9996;padding:10px}
+.admin-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.input{background:rgba(255,255,255,0.02);border-radius:8px;padding:8px;color:#fff;border:1px solid rgba(255,255,255,0.04)}
+.small-note{font-size:12px;color:#9fbcd0}
+.buyall-bouncy{display:inline-block}
+</style>
+
+</head>  
+<body>  <!-- Background (upload your stadium image or set via inline style) -->  <div id="bgLayer" style="background-image:url('background.jpg');"></div>  <!-- Activity feed (top, centered) -->  <div class="activity-wrap">  
+  <div class="activity-feed pulse" id="activityFeed">  
+    <div class="activity-text" id="activityText"><span class="activity-accent">Welcome!</span> Getting things ready...</div>  
+  </div>  
+</div>  <!-- Splash / intro -->  <div class="splash" id="splash">  
+  <div class="splash-inner">  
+    <div class="splash-word fortune" id="splashFortune">Fortune</div>  
+    <div class="splash-word ticket-word" id="splashTicket">Ticket</div>  
+    <div class="splash-title" id="splashTitle">Win Big!!!</div>  
+  </div>  
+</div>  <div class="wrap">  
+  <div class="app">  
+    <div class="header glass" style="display:flex;align-items:center;gap:12px">  
+      <div class="logo" aria-hidden="true"></div>  
+      <div>  
+        <h1 class="h1">FortuneTicket</h1>  
+        <div class="small-note">Buy tickets • Watch ads • Win the pot</div>  
+      </div>  
+      <div style="margin-left:auto">  
+        <button class="btn ghost" id="newsBtn">News</button>  
+        <button class="btn ghost" id="muteBtn">Mute</button>  
+      </div>  
+    </div>  <div class="grid">  
+  <div class="glass panel">  
+    <div>Balance (USDT): <div class="amt" id="balanceStr">0.000000</div></div>  
+
+    <div style="margin-top:10px;display:flex;gap:8px">  
+      <button class="btn primary" id="depositBtn">Deposit</button>  
+      <button class="btn ghost" id="uploadBgBtn">Upload Background</button>  
+      <input type="file" id="bgFile" accept="image/*" style="display:none" />  
+    </div>  
+
+    <div style="margin-top:12px" class="glass panel">  
+      <div style="display:flex;justify-content:space-between"><strong>Actions</strong><div id="adQuota">Ads left: 5/hour</div></div>  
+      <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">  
+        <button class="btn primary" id="watchAdBtn">Watch Ad ▶ (Earn 0.0025)</button>  
+        <button class="btn primary" id="buy1Btn">Buy 1</button>  
+        <button class="btn primary" id="buy5Btn">Buy 5</button>  
+        <button class="btn ghost" id="autoBuyBtn">Auto-buy</button>  
+      </div>  
+      <div style="margin-top:8px;color:#cfeefc">Ticket cost: <strong>0.0025 USDT</strong> · Total: <strong>1000</strong></div>  
+    </div>  
+  </div>  
+
+  <div class="glass panel">  
+    <div style="display:flex;justify-content:space-between;align-items:center">  
+      <div><strong>Ticket Board</strong><div class="small-note">Serial buying only</div></div>  
+      <div style="text-align:right"><div>Round: <strong id="roundId">1</strong></div><div id="announceBox">Winner in: —</div></div>  
+    </div>  
+
+    <div style="margin-top:10px"><div class="ticket-grid" id="ticketGrid" role="list" aria-label="Ticket grid"></div></div>  
+  </div>  
+
+  <div class="glass panel">  
+    <div><strong>Current Pot</strong>  
+      <div style="margin-top:8px;display:flex;justify-content:space-between;align-items:center"><div>Pot: <strong id="potStr">0.000000</strong> USDT</div><div>Next draw: <div id="nextDraw">—</div></div></div>  
+    </div>  
+
+    <div style="margin-top:12px">  
+      <div class="leaderboard-tabs" id="leaderTabs">  
+        <button class="tab-btn active" data-type="daily">Daily</button>  
+        <button class="tab-btn" data-type="weekly">Weekly</button>  
+        <button class="tab-btn" data-type="alltime">All-Time</button>  
+      </div>  
+      <div id="leaderboard" class="leaderboard"></div>  
+      <div style="text-align:center;margin-top:8px"><button class="btn ghost" id="clearLb">Clear</button></div>  
+    </div>  
+
+    <!-- ADMIN TEST BUTTON: Remove this later -->  
+    <div style="margin-top:14px;display:flex;justify-content:center">  
+      <button class="btn primary buyall-bouncy" id="buyAllBtn" title="Admin test: buy all tickets (remove later)">Buy All Tickets (Admin)</button>  
+    </div>  
+  </div>  
+</div>
+
+  </div>  
+</div>  <!-- news panel -->  <div class="news-panel glass" id="newsPanel">  
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><strong>News & Announcements</strong><button id="closeNews" class="btn ghost">Close</button></div>  
+  <div style="margin-top:8px">  
+    <div style="margin-bottom:8px"><strong>Round 42 winner</strong><div class="small-note">@BitBoss won 1.25 USDT</div></div>  
+    <div style="margin-bottom:8px"><strong>Deposit Bonus</strong><div class="small-note">Weekend deposit bonus active</div></div>  
+    <div style="margin-bottom:8px"><strong>Maintenance</strong><div class="small-note">Scheduled maintenance tomorrow 03:00 UTC</div></div>  
+  </div>  
+</div>  <!-- admin drawer -->  <div class="admin-drawer glass" id="adminDrawer">  
+  <div class="admin-row">  
+    <label style="font-weight:800">Admin Controls:</label>  
+    <label>Set draw time (HH:MM): <input class="input" id="adminTime" placeholder="14:00" /></label>  
+    <label>Tickets sold (simulate): <input class="input" id="adminTickets" type="number" min="0" max="1000" value="0" /></label>  
+    <button class="btn ghost" id="resetBtn">Reset Game</button>  
+  </div>  
+</div>  <canvas id="confetti"></canvas>
+
+<!-- ad overlay -->  <div id="adOverlay" style="display:none;position:fixed;inset:0;align-items:center;justify-content:center;z-index:10000">  
+  <div class="glass" style="padding:18px;max-width:320px;text-align:center">  
+    <div style="font-weight:800">Watch ad to earn 0.0025 USDT</div>  
+    <div id="adTimer" style="font-size:28px;margin:10px">5</div>  
+    <button class="btn ghost" id="closeAdBtn">Skip (no reward)</button>  
+  </div>  
+</div>  <script>  
+/* -------------------- Core state & storage -------------------- */  
+const TICKET_COUNT = 1000;  
+const MICRO = 1_000_000;  
+const TICKET_COST_MICRO = Math.round(0.0025 * MICRO);  
+const AD_REWARD_MICRO = TICKET_COST_MICRO;  
+const MAX_ADS_PER_HOUR = 5;  
+  
+const keys = {  
+  balance: 'ft_balance_v_final',  
+  round: 'ft_round_v_final',  
+  tickets: r=>`ft_tickets_v_final_${r}`,  
+  owners: r=>`ft_owners_v_final_${r}`,  
+  wins: 'ft_wins_v_final',  
+  history: 'ft_history_v_final',  
+  adQuota: 'ft_ad_quota_v_final',  
+  musicMuted: 'ft_music_muted_v_final'  
+};  
+const load=(k,d=null)=>{ const v=localStorage.getItem(k); return v?JSON.parse(v):d };  
+const save=(k,v)=>localStorage.setItem(k,JSON.stringify(v));  
+  
+let round = load(keys.round,1);  
+let tickets = load(keys.tickets(round));  
+if(!tickets){ tickets = new Array(TICKET_COUNT).fill(0); save(keys.tickets(round), tickets); }  
+let owners = load(keys.owners(round), []);  
+let balanceMicro = load(keys.balance, 0);  
+  
+/* elements */  
+const el = id => document.getElementById(id);  
+const balanceStr = el('balanceStr');  
+const ticketGrid = el('ticketGrid');  
+const potStr = el('potStr');  
+const leaderboardEl = el('leaderboard');  
+const adQuotaEl = el('adQuota');  
+const announceBox = el('announceBox');  
+const nextDraw = el('nextDraw');  
+const activityText = el('activityText');  
+const activityFeed = el('activityFeed');  
+  
+/* -------------------- WebAudio synth engine -------------------- */  
+let audioCtx = null, audioUnlocked=false;  
+function ensureCtx(){ if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); return audioCtx; }  
+function unlockAudio(){  
+  if(audioUnlocked) return;  
+  try{  
+    ensureCtx();  
+    const buffer = audioCtx.createBuffer(1,1,22050);  
+    const src = audioCtx.createBufferSource(); src.buffer = buffer; src.connect(audioCtx.destination);  
+    if(audioCtx.state === 'suspended') audioCtx.resume();  
+    src.start(0); src.stop(0);  
+    audioUnlocked = true;  
+    if(musicOn) startLoopA();  
+  }catch(e){}  
+}  
+document.addEventListener('click', ()=>unlockAudio(), { once:true });  
+document.addEventListener('touchstart', ()=>unlockAudio(), { once:true });  
+  
+let activeNodes = [];  
+function stopAll(){ try{ activeNodes.forEach(n=>{ if(n.stop) try{ n.stop(0) }catch(e){} if(n.disconnect) try{ n.disconnect(); }catch(e){} }); }catch(e){} activeNodes=[]; }  
+function showCongratsMessage(ticketCount) {  
+  const msg = document.createElement("div");  
+  msg.className = "congrats-popup";  
+  const motivationMessages = [  
+    "🔥 Your odds of winning are rising!",  
+    "💫 You’re getting closer to the jackpot!",  
+    "💰 You’re building a winning streak!",  
+    "🏆 Keep it up! Luck’s on your side!",  
+    "🚀 You’re on a roll! Don’t stop now!",  
+    "🎯 Your chances are climbing higher!"  
+  ];  
+  const randomColor = ["#FFD700","#A020F0","#00BFFF","#32CD32","#FF4500","#FF69B4"][Math.floor(Math.random()*6)];  
+  const message =  
+    ticketCount === 1  
+      ? `<h3>🎉 Congrats!</h3><p>You’ve entered the draw!</p><p class="hint">Buy more tickets to increase your odds of winning!</p>`  
+      : `<h3 style="color:${randomColor}">${motivationMessages[Math.floor(Math.random()*motivationMessages.length)]}</h3>`;  
+  msg.innerHTML = message;  
+  document.body.appendChild(msg);  
+  
+  gsap.fromTo(msg, { scale: 0, opacity: 0 },  
+                    { scale: 1.15, opacity: 1, duration: 0.5, ease: "back.out(1.7)" });  
+  setTimeout(() => {  
+    gsap.to(msg, { opacity: 0, scale: 0.8, duration: 0.5, onComplete: () => msg.remove() });  
+  }, 3000);  
+}  
+function createOsc(type,freq,start,dur,gain=0.06,pan=0){  
+  const c = ensureCtx();  
+  const osc = c.createOscillator();  
+  const g = c.createGain();  
+  osc.type = type; osc.frequency.setValueAtTime(freq, c.currentTime + start);  
+  g.gain.setValueAtTime(0.0001, c.currentTime + start);  
+  g.gain.linearRampToValueAtTime(gain, c.currentTime + start + 0.008);  
+  g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + start + dur - 0.02);  
+  if(typeof c.createStereoPanner !== 'undefined'){  
+    const p = c.createStereoPanner();  
+    p.pan.setValueAtTime(pan, c.currentTime + start);  
+    osc.connect(g); g.connect(p); p.connect(c.destination); activeNodes.push(osc,p,g);  
+  } else { osc.connect(g); g.connect(c.destination); activeNodes.push(osc,g); }  
+  osc.start(c.currentTime + start); osc.stop(c.currentTime + start + dur);  
+}  
+function createNoise(start,dur,gain=0.03){  
+  const c = ensureCtx(); const buf = c.createBuffer(1, Math.floor(c.sampleRate * dur), c.sampleRate);  
+  const d = buf.getChannelData(0); for(let i=0;i<d.length;i++) d[i] = (Math.random()*2-1) * 0.2;  
+  const src = c.createBufferSource(); src.buffer = buf; const g = c.createGain();  
+  g.gain.setValueAtTime(0.0001, c.currentTime + start); g.gain.linearRampToValueAtTime(gain, c.currentTime + start + 0.006);  
+  g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + start + dur - 0.02); src.connect(g); g.connect(c.destination);  
+  src.start(c.currentTime + start); src.stop(c.currentTime + start + dur); activeNodes.push(src,g);  
+}  
+  
+/* sound mapping */  
+function playIntroSound(){ stopAll(); createOsc('sine',70,0,1.6,0.06,-0.2); createOsc('sawtooth',140,0.05,1.6,0.04,0.1); createOsc('sine',480,0.8,0.8,0.1); setTimeout(()=>stopAll(),1600); }  
+function playBuySound(){ stopAll(); createOsc('triangle',720,0,0.18,0.14); createOsc('sine',1180,0.05,0.22,0.06); setTimeout(()=>stopAll(),900); }  
+function playCongratsSound(){ stopAll(); for(let k=0;k<5;k++) createOsc('sine',880 + k*40, k*0.06, 0.42, 0.05, (k%2? -0.3:0.3)); setTimeout(()=>stopAll(),1400); }  
+function playWinnerSound(){ stopAll(); createOsc('sine',392,0,1.0,0.12); createOsc('sine',392*1.5,0.08,1.1,0.14); createOsc('sine',392*2,0.18,1.2,0.18); setTimeout(()=>stopAll(),1600); }  
+/* micro swish for activity feed */  
+function playSwish(){ if(!audioUnlocked) return; createOsc('sine',1000,0,0.12,0.03,0.12); createNoise(0.02,0.08,0.01); }  
+  
+/* background loop */  
+let loopInterval=null;  
+function playLoopOnce(){ createOsc('sine',66,0,10,0.045); for(let k=0;k<5;k++) createOsc(k%2?'triangle':'sine',220 + k*18, k*1.8, Math.max(3,10 - k*1.8), 0.02); for(let k=0;k<6;k++) createOsc('sine',880 + k*6, 1 + k*1.4, 0.08, 0.03); }  
+function startLoopA(){ if(loopInterval||!audioUnlocked) return; ensureCtx(); playLoopOnce(); loopInterval = setInterval(playLoopOnce,10000); }  
+function stopLoopA(){ if(loopInterval) clearInterval(loopInterval); loopInterval=null; stopAll(); }  
+  
+/* music toggle */  
+let musicOn = !load(keys.musicMuted, false);  
+if(musicOn && audioUnlocked) startLoopA();  
+  
+/* -------------------- confetti -------------------- */  
+const confetti = el('confetti'); const cctx = confetti.getContext('2d');  
+function resizeConf(){ confetti.width = innerWidth; confetti.height = innerHeight; } resizeConf(); window.addEventListener('resize', resizeConf);  
+let confPieces=[], confAnim=null;  
+function launchConfetti(n=120){  
+  confPieces=[]; for(let i=0;i<n;i++){ confPieces.push({ x: Math.random()*confetti.width, y: -20 - Math.random()*300, vx: -6 + Math.random()*12, vy: 2 + Math.random()*6, r: 6 + Math.random()*12, rot: Math.random()*360, vr: -8 + Math.random()*16, color: `hsl(${Math.floor(Math.random()*360)},80%,55%)` }); }  
+  if(confAnim) cancelAnimationFrame(confAnim);  
+  (function frame(){ cctx.clearRect(0,0,confetti.width,confetti.height);  
+    for(const p of confPieces){ p.x += p.vx; p.y += p.vy; p.vy += 0.08; p.rot += p.vr; cctx.save(); cctx.translate(p.x,p.y); cctx.rotate(p.rot*Math.PI/180); cctx.fillStyle = p.color; cctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*0.6); cctx.restore(); }  
+    confPieces = confPieces.filter(p => p.y < confetti.height + 200);  
+    if(confPieces.length) confAnim = requestAnimationFrame(frame);  
+  })();  
+}  
+  
+/* -------------------- UI & Game logic -------------------- */  
+function toUSDT(m){ return (m / MICRO).toFixed(6); }  
+function saveState(){ save(keys.tickets(round), tickets); save(keys.owners(round), owners); save(keys.balance, balanceMicro); }  
+  
+function getNextIndex(){ for(let i=0;i<TICKET_COUNT;i++) if(!tickets[i]) return i; return -1; }  
+function canAfford(n){ return balanceMicro >= n * TICKET_COST_MICRO; }  
+  
+function renderTicketGrid(){  
+  ticketGrid.innerHTML=''; for(let i=0;i<TICKET_COUNT;i++){ const d=document.createElement('div'); d.className='ticket'+(tickets[i]?' taken':''); d.textContent=i+1; d.dataset.index=i; if(!tickets[i]) d.addEventListener('click', ()=>{ if(!canAfford(1)){ alert('Insufficient balance'); return; } buyTickets(1,'You'); }); ticketGrid.appendChild(d); }  
+}  
+  
+function renderLeaderboardData(type){  
+  // fake/mock data generator for each tab  
+  const names = ['@CryptoLion','@BitBoss','@LuckyWhale','@MoonRider','@DeFiQueen','@TokenKing','@SatoshiJoe','@GalaxyQueen','@NFTShark','@WhaleHunter','@FomoFan','@RugPuller'];  
+  const arr = [];  
+  for(let i=0;i<10;i++){  
+    const name = names[Math.floor(Math.random()*names.length)];  
+    const amount = Number((Math.random()*3 + (type==='alltime'?5:0)).toFixed(4)); // more for all-time  
+    arr.push({ name, amount });  
+  }  
+  // sort  
+  arr.sort((a,b)=>b.amount - a.amount);  
+  leaderboardEl.innerHTML='';  
+  arr.forEach((r,i)=>{ const row = document.createElement('div'); row.className='item'; row.innerHTML = `<div>#${i+1} <strong style="margin-left:8px">${escapeHtml(r.name)}</strong></div><div>${toUSDT(Math.round(r.amount*MICRO))} USDT</div>`; leaderboardEl.appendChild(row); });  
+}  
+  
+function renderAll(){ balanceStr.textContent = toUSDT(balanceMicro); potStr.textContent = toUSDT(owners.length * TICKET_COST_MICRO); renderTicketGrid(); renderAdQuota(); renderLeaderboardData('daily'); }  
+  
+function escapeHtml(s){ return String(s).replace(/[&<>'"\\]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;","\\":"\\\\"}[c])); }  
+  
+/* congrats */  
+function showCongrats(){ playCongratsSound(); launchConfetti(80); }  
+  
+/* buy flow */  
+function buyTickets(n,buyer='You'){  
+  if(!audioUnlocked) unlockAudio();  
+  playBuySound();  
+  const bought=[];  
+  for(let k=0;k<n;k++){ const idx=getNextIndex(); if(idx===-1) break; if(!canAfford(1)){ alert('Insufficient'); break; } tickets[idx]=1; owners.push({ ticket: idx+1, name: buyer, ts: Date.now() }); balanceMicro -= TICKET_COST_MICRO; bought.push(idx+1); const tile = ticketGrid.querySelector(`.ticket[data-index='${idx}']`); if(tile){ tile.classList.add('taken'); tile.animate([{transform:'translateY(0)'},{transform:'translateY(-10px) scale(1.04)'},{transform:'translateY(0)'}],{duration:360,easing:'cubic-bezier(.2,.9,.2,1)'}); } if(buyer==='You') showCongrats(); } saveState(); renderAll(); if(owners.length === TICKET_COUNT) scheduleAnnouncement(); }  
+  
+/* ad logic */  
+function getAdState(){ const now = Date.now(); let obj = load(keys.adQuota, {}); if(!obj.windowStart || now - obj.windowStart >= 3600_000){ obj = { windowStart: now, used: 0 }; save(keys.adQuota, obj); } const left = Math.max(0, MAX_ADS_PER_HOUR - (obj.used||0)); return { left, obj }; }  
+function renderAdQuota(){ adQuotaEl.textContent = `Ads left: ${getAdState().left}/hour`; }  
+  
+function startAd(){ const s = getAdState(); if(s.left <= 0){ alert('Ad limit reached for this hour'); return; } el('adOverlay').style.display='flex'; let ct=5; el('adTimer').textContent=ct; const id=setInterval(()=>{ ct--; el('adTimer').textContent=ct; if(ct<=0){ clearInterval(id); el('adOverlay').style.display='none'; balanceMicro += AD_REWARD_MICRO; const q = load(keys.adQuota, {}); q.windowStart = q.windowStart || Date.now(); q.used = (q.used||0) + 1; save(keys.adQuota, q); save(keys.balance, balanceMicro); renderAll(); playBuySound(); alert('+0.0025 USDT'); } },1000); el('closeAdBtn').onclick = ()=>{ clearInterval(id); el('adOverlay').style.display='none'; alert('Ad skipped'); }; }  
+  
+/* deposit */  
+function depositFlow(){ const s = prompt('Deposit amount in USDT (e.g. 1.5)'); if(!s) return; const v = Number(s); if(isNaN(v) || v<=0){ alert('Invalid'); return; } balanceMicro += Math.round(v * MICRO); save(keys.balance, balanceMicro); renderAll(); }  
+  
+/* schedule announcement (nearest even hour) */  
+let announceTimer=null, announceTimeout=null;  
+function scheduleAnnouncement(){  
+  const now = new Date(); let candidate = new Date(now.getTime()); let h = candidate.getHours();  
+  if(candidate.getMinutes()===0 && candidate.getSeconds()===0 && (h%2===0)) candidate.setMilliseconds(0);  
+  else { let ch = h+1; while(ch%2!==0) ch++; candidate.setHours(ch,0,0,0); }  
+  const msUntil = candidate.getTime() - Date.now();  
+  nextDraw.textContent = candidate.toLocaleString();  
+  if(announceTimeout) clearTimeout(announceTimeout);  
+  announceTimeout = setTimeout(()=> pickWinner(), Math.max(0, msUntil));  
+  if(announceTimer) clearInterval(announceTimer);  
+  announceTimer = setInterval(()=>{ const diff = candidate.getTime() - Date.now(); if(diff<=0){ announceBox.textContent='Winner now...'; clearInterval(announceTimer); } else { const hr=Math.floor(diff/3600000); const mn=Math.floor((diff%3600000)/60000); const s=Math.floor((diff%60000)/1000); announceBox.textContent = `Winner in: ${hr}h ${mn}m ${s}s`; } },1000);  
+}  
+  
+/* pick random winner */  
+function pickWinner(){ if(owners.length === 0){ alert('No tickets sold — round cancelled'); resetRound(); return; } const winnerIndex = Math.floor(Math.random() * owners.length); const winner = owners[winnerIndex]; const pot = owners.length * TICKET_COST_MICRO; const wins = load(keys.wins, []); wins.push({ name: winner.name, amount: pot, ts: Date.now() }); save(keys.wins, wins); const hist = load(keys.history, []); hist.push({ winner: winner.name, ticket: winner.ticket, amount: pot, timestamp: Date.now() }); save(keys.history, hist); alert(`Winner: ${winner.name} (Ticket #${winner.ticket}) — won ${toUSDT(pot)} USDT`); playWinnerSound(); launchConfetti(160); if(winner.name === 'You'){ balanceMicro += pot; save(keys.balance, balanceMicro); } resetRound(); }  
+function resetRound(){ round = (load(keys.round,1) || 1) + 1; save(keys.round, round); tickets = new Array(TICKET_COUNT).fill(0); owners = []; save(keys.tickets(round), tickets); save(keys.owners(round), owners); if(announceTimer) clearInterval(announceTimer); if(announceTimeout) clearTimeout(announceTimeout); nextDraw.textContent='—'; announceBox.textContent='Winner in: —'; renderAll(); }  
+  
+/* -------------------- Admin & UI wiring -------------------- */  
+el('depositBtn').addEventListener('click', depositFlow);  
+el('watchAdBtn').addEventListener('click', startAd);  
+el('buy1Btn').addEventListener('click', ()=>{ if(!canAfford(1)){ alert('Insufficient'); return; } buyTickets(1,'You'); });  
+el('buy5Btn').addEventListener('click', ()=>{ if(!canAfford(5)){ alert('Insufficient'); return; } buyTickets(5,'You'); });  
+  
+el('autoBuyBtn').addEventListener('click', async ()=>{  
+  if(el('autoBuyBtn').dataset.busy === '1'){ el('autoBuyBtn').dataset.busy='0'; el('autoBuyBtn').textContent='Auto-buy'; return; }  
+  el('autoBuyBtn').dataset.busy='1'; el('autoBuyBtn').textContent='Stop';  
+  while(el('autoBuyBtn').dataset.busy==='1'){ const next = getNextIndex(); if(next===-1) break; if(!canAfford(1)){ alert('Insufficient'); el('autoBuyBtn').dataset.busy='0'; el('autoBuyBtn').textContent='Auto-buy'; break; } buyTickets(1,'You'); await new Promise(r=>setTimeout(r,120)); }  
+  el('autoBuyBtn').dataset.busy='0'; el('autoBuyBtn').textContent='Auto-buy';  
+});  
+  
+/* Buy All (admin) animated fast wave */  
+function animateBuyAll(){  
+  if(!audioUnlocked) unlockAudio();  
+  const speed = 2; let i=0; playBuySound();  
+  const interval = setInterval(()=>{ if(i>=TICKET_COUNT){ clearInterval(interval); playCongratsSound(); launchConfetti(220); alert('All tickets bought (Admin)'); scheduleAnnouncement(); return; } if(!tickets[i]){ tickets[i]=1; owners.push({ ticket:i+1, name:'Admin', ts: Date.now() }); const tile = document.querySelector(`.ticket[data-index='${i}']`); if(tile) { tile.classList.add('taken'); tile.animate([{transform:'translateY(0)'},{transform:'translateY(-8px) scale(1.03)'},{transform:'translateY(0)'}],{duration:200,easing:'cubic-bezier(.2,.9,.2,1)'}); } } i++; }, speed);  
+}  
+el('buyAllBtn').addEventListener('click', ()=>{ /* ADMIN TEST BUTTON: Remove this later */ gsap.fromTo('#buyAllBtn',{scale:1},{scale:1.06,duration:.18, yoyo:true, repeat:3, ease:'sine.inOut'}); animateBuyAll(); });  
+  
+el('resetBtn').addEventListener('click', ()=>{ if(!confirm('Reset game and clear leaderboard?')) return; save(keys.wins, []); save(keys.history, []); save(keys.balance, 0); balanceMicro = 0; resetRound(); renderAll(); });  
+  
+el('adminTime').addEventListener('change', ()=>{ const v = el('adminTime').value; if(!v) return; const parts = v.split(':'); if(parts.length!==2) return; const hh = Number(parts[0]); const mm = Number(parts[1]); const now = new Date(); let candidate = new Date(now.getTime()); candidate.setHours(hh, mm, 0, 0); if(candidate.getTime() <= Date.now()) candidate.setDate(candidate.getDate() + 1); if(announceTimeout) clearTimeout(announceTimeout); if(announceTimer) clearInterval(announceTimer); const ms = candidate.getTime() - Date.now(); nextDraw.textContent = candidate.toLocaleString(); announceTimeout = setTimeout(()=> pickWinner(), ms); announceTimer = setInterval(()=>{ const diff = candidate.getTime() - Date.now(); if(diff<=0){ announceBox.textContent='Winner now...'; clearInterval(announceTimer); } else { const hr=Math.floor(diff/3600000); const mn=Math.floor((diff%3600000)/60000); const s=Math.floor((diff%60000)/1000); announceBox.textContent = `Winner in: ${hr}h ${mn}m ${s}s`; } },1000); alert('Manual draw time set'); });  
+  
+el('adminTickets').addEventListener('change', ()=>{ const v = Number(el('adminTickets').value) || 0; if(v<0 || v>1000) return; tickets = new Array(TICKET_COUNT).fill(0); owners = []; for(let i=0;i<v;i++){ tickets[i]=1; owners.push({ ticket:i+1, name:'Admin', ts:Date.now() }); } saveState(); renderAll(); });  
+  
+/* news panel */  
+el('newsBtn').addEventListener('click', ()=> gsap.to('#newsPanel', { x:-420, duration:0.6, ease:'power3.out' }));  
+el('closeNews').addEventListener('click', ()=> gsap.to('#newsPanel', { x:0, duration:0.5, ease:'power3.in' }));  
+  
+/* upload background */  
+el('uploadBgBtn').addEventListener('click', ()=> el('bgFile').click());  
+el('bgFile').addEventListener('change', e=>{ const f = e.target.files && e.target.files[0]; if(!f) return; const r=new FileReader(); r.onload=ev=>{ el('bgLayer').style.backgroundImage = `url('${ev.target.result}')`; el('bgLayer').style.transform='scale(1.02)'; setTimeout(()=> el('bgLayer').style.transform='',900); }; r.readAsDataURL(f); });  
+  
+/* mute toggle */  
+el('muteBtn').addEventListener('click', ()=>{ musicOn = !musicOn; save(keys.musicMuted, !musicOn); if(!musicOn){ stopLoopA(); el('muteBtn').textContent='Unmute'; } else { if(audioUnlocked) startLoopA(); el('muteBtn').textContent='Mute'; } });  
+el('muteBtn').textContent = musicOn? 'Mute' : 'Unmute';  
+  
+/* splash animation (visual) - auto play on load */  
+function runSplash(){  
+  const f = el('splashFortune'), t = el('splashTicket'), title = el('splashTitle'), splash = el('splash');  
+  gsap.set([f,t,title], {opacity:0});  
+  gsap.set(f, {x:-500}); gsap.set(t,{x:500}); gsap.set(title,{scale:0.96,opacity:0});  
+  gsap.to(f, {x:0, opacity:1, duration:0.86, ease:'power3.out'});  
+  gsap.to(t, {x:0, opacity:1, duration:0.86, ease:'power3.out', delay:0.08});  
+  gsap.to(title, {opacity:1, scale:1.06, duration:0.9, delay:0.9, ease:'elastic.out(1.1,0.45)'});  
+  setTimeout(()=>{ launchConfetti(120); if(audioUnlocked) playIntroSound(); else try{ playIntroSound(); }catch(e){} }, 1100);  
+  setTimeout(()=>{ gsap.to(splash, { opacity:0, duration:0.6, onComplete: ()=> { const s = el('splash'); if(s) s.remove(); } }); }, 5000);  
+}  
+  
+/* unlock audio on first gesture */  
+document.addEventListener('click', function once(){ unlockAudio(); }, { once:true });  
+document.addEventListener('touchstart', function once2(){ unlockAudio(); }, { once:true });  
+  
+/* initial render */  
+renderAll(); if(owners.length === TICKET_COUNT) scheduleAnnouncement(); window.addEventListener('load', ()=>runSplash());  
+  
+/* auto-scroll for next available ticket */  
+const mo = new MutationObserver(()=>{ const n=getNextIndex(); if(n>=0){ const eln = document.querySelector(`.ticket[data-index='${n}']`); if(eln) eln.scrollIntoView({behavior:'smooth', block:'center'}); } }); mo.observe(ticketGrid, { childList:true, subtree:true });  
+  
+/* -------------------- Activity Feed logic (randomized) -------------------- */  
+const fakeNames = ['@CryptoLion','@BitBoss','@LuckyWhale','@MoonRider','@DeFiQueen','@TokenKing','@SatoshiJoe','@GalaxyQueen','@NFTShark','@WhaleHunter','@FomoFan','@RugPuller'];  
+const feedPool = [  
+  (n)=>`🎟️ ${n} grabbed ${Math.ceil(Math.random()*25)} tickets!`,  
+  (n)=>`💰 ${n} earned 0.0025 USDT watching an ad!`,  
+  (n)=>`🔥 ${n} bought ${Math.ceil(Math.random()*100)} tickets — odds rising!`,  
+  (n)=>`🎉 ${n} joined the draw!`,  
+  (n)=>`🏆 ${n} hit the leaderboard!`,  
+  (n)=>`💎 ${Math.ceil(Math.random()*950)} tickets sold — hurry!`,  
+  (n)=>`⚡ ${n} deposited ${ (Math.random()*5+0.5).toFixed(3) } USDT`  
+];  
+  
+let lastFeed = null;  
+function randomFeedMessage(){  
+  const name = fakeNames[Math.floor(Math.random()*fakeNames.length)];  
+  const tpl = feedPool[Math.floor(Math.random()*feedPool.length)];  
+  return tpl(name);  
+}  
+let feedInterval = null;  
+function startFeedRotation(){  
+  if(feedInterval) return;  
+  showFeed(randomFeedMessage());  
+  feedInterval = setInterval(()=>{ showFeed(randomFeedMessage()); }, 5000);  
+}  
+function stopFeedRotation(){ if(feedInterval) clearInterval(feedInterval); feedInterval=null; }  
+  
+/* call this to push custom messages too */  
+function addFeedMessage(msg){  
+  showFeed(msg);  
+}  
+  
+function showFeed(msg){  
+  // animate current out, new in  
+  playSwish();  
+  gsap.to(activityText, { opacity:0, y:-8, duration:0.25, ease:'power1.in', onComplete: ()=>{  
+    activityText.innerHTML = `<span class="activity-accent">${msg.split(' ')[0]}</span> ${msg.replace(/^[^ ]+ /,'')}`;  
+    gsap.fromTo(activityText, { opacity:0, y:8 }, { opacity:1, y:0, duration:0.5, ease:'power3.out' });  
+  }});  
+}  
+  
+/* -------------------- Leaderboard tabs -------------------- */  
+const tabButtons = document.querySelectorAll('.tab-btn');  
+tabButtons.forEach(btn=> btn.addEventListener('click', ()=>{  
+  tabButtons.forEach(b=>b.classList.remove('active'));  
+  btn.classList.add('active');  
+  const type = btn.dataset.type;  
+  // animate swap  
+  gsap.to('#leaderboard', { opacity:0, y:6, duration:0.25, onComplete: ()=>{  
+    renderLeaderboardData(type);  
+    gsap.fromTo('#leaderboard', {opacity:0, y:-6}, {opacity:1, y:0, duration:0.32, ease:'power3.out'});  
+  }});  
+}));  
+  
+/* Start feed and initial leaderboard */  
+startFeedRotation();  
+renderLeaderboardData('daily');  
+  
+/* helper exposed for external triggers */  
+window.addFeedMessage = addFeedMessage;  
+  
+</script>  </body>  
+</html>  

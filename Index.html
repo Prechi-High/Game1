@@ -1,0 +1,888 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0,maximum-scale=1.0, user-scalable=no"/>
+  
+<title>Diamond Card - Ticket Mode (Updated)</title>
+
+<!-- FontAwesome & Animate -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+
+<!-- GSAP for animations -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+<style>
+/* =======================
+   Base (retain your theme)
+   ======================= */
+*{box-sizing:border-box;margin:0;padding:0;max-width: 100%;}
+html,body{height:100vh;color:#fff;font-family:'Segoe UI',Tahoma,Arial, sans-serif;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden!important;box-sizing:border-box;
+  background-image:url("background.jpg");
+  background-size:cover;
+  width: 100vw;
+  max-width: 100vw;
+  touch-action: pan-y;
+  overscroll-behavior: none;
+  position: relative;
+
+background-repeat:no-repaet;background-attachment:fixed} /* prevent horizontal scroll */
+
+/* Fortune Ticket glow effect */
+  
+  /* --- App feel + layout lock --- */
+
+
+.fortune,
+.ticket-word {
+  text-shadow:
+    0 0 12px rgba(191,163,255,0.8),
+    0 0 24px rgba(191,163,255,0.6),
+    0 0 48px rgba(191,163,255,0.4);
+  animation: glowPulse 2.6s ease-in-out infinite alternate;
+}
+
+@keyframes glowPulse {
+  0% { text-shadow: 0 0 8px rgba(191,163,255,0.4), 0 0 16px rgba(191,163,255,0.3); }
+  100% { text-shadow: 0 0 16px rgba(191,163,255,0.8), 0 0 32px rgba(191,163,255,0.6); }
+}/* === Fix center alignment and horizontal spacing === */
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  padding-left: max(10px, env(safe-area-inset-left));
+  padding-right: max(10px, env(safe-area-inset-right));
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100%, 1fr));
+  gap: 14px;
+  width: 100%;
+  max-width: 950px;
+  margin: 0 auto;
+  padding: 0 0;
+  box-sizing: border-box;
+}
+@media (min-width: 760px) {
+  .grid {
+    grid-template-columns: 360px 1fr 320px; /* restore layout for larger screens */
+  }
+}
+@media (max-width: 480px) {
+  .grid {
+    width: 100%;
+    padding: 0 8px;
+  }
+}
+/* Prevent horizontal scroll overflow */
+body, html {
+  overflow-x: hidden !important;
+}
+/* Background */
+.bg-animation{position:fixed;inset:0;background:z-index:-2;background-size:cover;background-position:center}
+.bg-animation::before{content:'';position:absolute;inset:0;background:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><radialGradient id="grad" cx="50%" cy="50%" r="50%"><stop offset="0%" style="stop-color:%23ff6b6b;stop-opacity:0.2" /><stop offset="100%" style="stop-color:%23transparent" /></radialGradient></defs><circle cx="20" cy="20" r="2" fill="url(%23grad)"><animate attributeName="cy" values="20;80;20" dur="3s" repeatCount="indefinite"/></circle><circle cx="80" cy="80" r="2" fill="url(%23grad)"><animate attributeName="cy" values="80;20;80" dur="3s" repeatCount="indefinite"/></circle></svg>') repeat;opacity:.08;animation:float 10s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-20px)}}
+
+/* Activity feed (fixed top, centered) */
+.activity-wrap{position:fixed;left:50%;transform:translateX(-50%);top:14px;z-index:1100;width:92%;max-width:920px;pointer-events:none}
+.activity-feed{pointer-events:auto;background:linear-gradient(90deg, rgba(255,215,120,0.04), rgba(124,58,237,0.03));border:1px solid rgba(255,255,255,0.04);backdrop-filter:blur(8px);padding:10px 14px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.18);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.activity-text{font-weight:700;font-size:14px;color:#eaf6ff;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.activity-accent{background:linear-gradient(90deg,#ffd773,#bfa3ff);-webkit-background-clip:text;color:transparent;font-weight:900;padding-right:8px}
+
+/* Header */
+.header{background:rgba(10,10,10,0.0);backdrop-filter:blur(12px);position:fixed;top:50px;left:0;right:0;z-index:1050;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+.nav{display:block;align-items:center;gap:12px;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;font-weight:700;margin-bottom:10px}
+.diamond-icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(45deg,#ff6b6b,#ffd93d,#4ecdc4);box-shadow:0 6px 18px rgba(255,107,107,0.15)}
+.header-right{display:flex;gap:10px;align-items:center}
+
+/* Stats pill (new): Total Tickets & Earnings */
+.stats-pill{display:flex;gap:12px;align-items:center;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));padding:8px 12px;border-radius:12px;border:1px solid rgba(255,255,255,0.04)}
+.stat{display:flex;flex-direction:column;align-items:flex-start}
+.stat strong{font-size:1.05rem}
+.stat small{font-size:.72rem;opacity:.8}
+.stat .icon{margin-right:8px}
+
+/* Buttons */
+.btn{color:white;padding:10px 18px;border-radius:999px;border:none;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.btn-primary{background:linear-gradient(45deg,#ff6b6b,#ffd93d);color:#04121a;box-shadow:0 8px 30px rgba(255,107,107,0.14)}
+.btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:#fff}
+.icon-btn{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px;border-radius:10px}
+
+/* Layout content padding to account for header */
+.main-pad{padding-top:260px;box-sizing:border-box;}
+
+/* Game area layout - keep original style but add panels */
+
+@media(min-width:1000px){.grid{grid-template-columns:360px 1fr 320px}}
+
+/* Panels */
+.glass{background:rgba(10,10,10,0.0);border-radius:12px;padding:12px 10px;border:1px solid rgba(255,255,255,0.04);backdrop-filter:blur(8px) ;position:relative}
+.small-note{font-size:12px;color:#cfeefc}
+
+/* Ticket grid */
+.ticket-grid{display:grid;gap:8px;padding:8px 0;overflow:hidden;height:420px;grid-template-columns:repeat(7, minmax(36px,1fr))} /* mobile-first 8 columns */
+@media(min-width:480px){ .ticket-grid{grid-template-columns:repeat(10,minmax(40px,1fr))} }
+@media(min-width:760px){ .ticket-grid{grid-template-columns:repeat(14,minmax(42px,1fr))} }
+@media(min-width:1000px){ .ticket-grid{grid-template-columns:repeat(20,minmax(44px,1fr))} }
+
+.ticket{height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;background:linear-gradient(180deg,#ffffff,#dff8f4);color:#022;cursor:pointer;user-select:none;box-shadow:0 6px 12px rgba(0,0,0,0.28);font-size:12px}
+.ticket.taken{background:linear-gradient(180deg,#222a30,#12181b);color:#b9eaf0;cursor:default;opacity:0.9}
+.ticket.selected{background:linear-gradient(135deg,#ffd773, #bfa3ff);color:#04121a;box-shadow:0 10px 30px rgba(190,130,255,0.12);transform:translateY(-4px)}
+.ticket.disabled{background:linear-gradient(180deg,#555,#3a3a3a);color:#ddd;cursor:not-allowed;opacity:0.6}
+
+/* Your Tickets box */
+.your-tickets{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.your-tickets .chips{display:flex;flex-wrap:wrap;gap:8px}
+.ticket-chip{padding:6px 10px;border-radius:8px;background:linear-gradient(90deg,#ffd773,#bfa3ff);color:#04121a;font-weight:800;font-size:13px;box-shadow:0 6px 20px rgba(190,130,255,0.08);cursor:pointer}
+
+/* Rules modal */
+.rules-modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:2000}
+.rules-inner{background:linear-gradient(180deg,rgba(10,10,10,0.98),rgba(8,8,12,0.98));padding:20px;border-radius:12px;max-width:520px;width:92%;border:1px solid rgba(255,255,255,0.04)}
+.rules-inner h3{margin-bottom:8px;color:#ffd93d}
+.rules-inner ul{margin-left:18px;color:#e6eef8;line-height:1.6}
+
+/* congrats popup */
+.congrats{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);z-index:2500;pointer-events:none;min-width:220px;text-align:center}
+.congrats .box{background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.06));padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04)}
+
+/* splash (fortune ticket intro) */
+.splash{position:absolute;top:200px;inset:0;display:flex;align-items:center;justify-content:center;z-index:2005;pointer-events:none}
+.splash-inner{position:relative;width:92%;max-width:920px;height:260px;border-radius:18px;display:flex;align-items:center;justify-content:center;overflow:visible;pointer-events:none}
+.splash-word{position:absolute;font-weight:900;font-size:64px;opacity:0;pointer-events:none;text-transform:uppercase;letter-spacing:2px}
+.fortune{left:6%;color:black;-webkit-background-clip:text;background:linear-gradient(90deg,#ffd773,#fff4b2); text-shadow:0 6px 28px rgba(255,184,0,0.12);padding:40px;}
+.ticket-word{right:6%;color:purple;-webkit-background-clip:text;background:linear-gradient(90deg,#bfa3ff,#7c3aed); text-shadow:0 6px 28px rgba(124,58,237,0.12);padding:8px;bottom:20%}
+.splash-title{position:relative;z-index:5;font-weight:900;font-size:36px;color:#eee;-webkit-background-clip:text;background:linear-gradient(90deg,#ffd773,#7c3aed);opacity:0;letter-spacing:2px}
+
+/* Confetti canvas */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:2400}
+
+/* Footer spacing */
+.footer{margin-top:30px;padding:40px 0}
+
+/* Responsive micro */
+@media(max-width:560px){ .stat strong{font-size:1rem} .ticket{height:36px;font-size:11px} .ticket-grid{gap:6px} .header{padding:10px 0} .splash-word{font-size:36px} .splash-title{font-size:22px} }
+
+/* logo visual */
+.logo-visual{width:52px;height:52px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:linear-gradient(90deg,#ffd773,#bfa3ff);box-shadow:0 8px 24px rgba(255,184,0,0.10)}
+
+/* small helper */
+.hidden{display:none!important}
+  #ticketGrid {
+  background: rgba(255, 255, 255, 0.03);
+  height: 540px;
+  overflow-y: auto;
+}
+  
+</style>
+</head>
+<body>
+
+<div class="bg-animation" id="bgLayer" aria-hidden="true"></div>
+
+<!-- Activity feed (top) -->
+<div class="activity-wrap">
+  <div class="activity-feed" id="activityFeed">
+    <div class="activity-text" id="activityText"><span class="activity-accent">Welcome!</span> Fortune Ticket — Ready to play</div>
+  </div>
+</div>
+
+<!-- Header -->
+<header class="header">
+  <div class="container">
+    <nav class="nav">
+      <a href="#" class="logo">
+              
+          
+        <div class="logo-visual" aria-hidden="true"><i class="fas fa-ticket-alt" style="font-size:20px;color:black"></i></div>
+        Fortune Ticket
+              <div class="header-right">
+          <!-- REMOVE LATER: Set Background (testing) -->
+          <button class="btn btn-ghost" id="muteBtn" title="Mute / Unmute"><i class="fas fa-volume-up"></i></button>
+         
+          <button class="btn icon-btn" id="rulesBtn" title="Game Rules">📜 Rules</button>
+        </div>
+      </a>
+           
+      <div style="display:block;gap:12px;align-items:center">
+        <!-- New stats pill with Total Tickets & Total Earnings -->
+        <div class="stats-pill" aria-hidden="false">
+          <div class="stat" style="display:flex;align-items:center;gap:8px">
+            <div class="icon" aria-hidden="true"><i class="fas fa-ticket-alt" style="color:#ffd773"></i></div>
+            <div>
+              <small style="display:block;color:#cfeefc">Total Tickets</small>
+              <strong id="totalTickets">0</strong>
+            </div>
+          </div>
+
+          <div style="width:1px;height:36px;background:rgba(255,255,255,0.03)"></div>
+
+          <div class="stat" style="display:flex;align-items:center;gap:8px">
+            <div class="icon" aria-hidden="true"><i class="fas fa-coins" style="color:#bfa3ff"></i></div>
+            <div>
+              <small style="display:block;color:#cfeefc">Total Earnings</small>
+              <strong id="totalEarnings">0.000000 USDT</strong>
+            </div>
+          </div>
+        </div>
+
+   
+      </div>
+    </nav>
+  </div>
+</header>
+
+<!-- splash / intro -->
+<div class="splash" id="splash">
+  <div class="splash-inner">
+    <div class="splash-word fortune" id="splashFortune">Fortune</div>
+    <div class="splash-word ticket-word" id="splashTicket">Ticket</div>
+    <!--  <div class="splash-title" id="splashTitle">Win Big!!!</div> -->
+  </div>
+</div>
+
+<!-- main content -->
+<main class="main-pad container" role="main">
+
+  <div class="grid">
+
+    <!-- left: controls -->
+    <div class="glass">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <strong>Controls</strong>
+          <div class="small-note">Watch ads to earn tickets — use tickets to claim numbers</div>
+        </div>
+        <div style="text-align:right"><small class="small-note">Round <strong id="roundId">1</strong></small></div>
+      </div>
+
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary" id="watchAdBtn">Watch Ad ▶ +1 Ticket</button>
+        <button class="btn btn-primary" id="autoPickBtn">Auto Pick Next</button>
+        <button class="btn btn-ghost" id="clearMyBtn">Clear My Picks</button>
+      </div>
+
+      <div style="margin-top:14px">
+        <div style="font-weight:700;margin-bottom:8px">Your Tickets</div>
+        <div class="your-tickets">
+          <div id="yourCount" style="font-size:13px;color:#cfeefc">Selected: <strong id="selectedCount">0</strong></div>
+          <div class="chips" id="yourChips" aria-live="polite" style="margin-top:8px"></div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <div style="font-weight:700;margin-bottom:6px">Ad Quota</div>
+        <div id="adQuota" class="small-note">Ads left: 5/hour</div>
+      </div>
+
+      <div style="margin-top:18px;"><small class="small-note">*Click a number on the board to claim it (cost: 1 ticket). Click again to unclaim and refund the ticket.</small></div>
+
+    </div>
+
+    <!-- center: ticket board -->
+    <div class="glass" style="min-height:540px;display:flex;flex-direction:column">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <strong>Ticket Board</strong>
+          <div class="small-note">Pick any number (1–1000)</div>
+        </div>
+        <div style="text-align:right">
+          <div class="small-note">Pot: <strong id="potStr">0.000000</strong> USDT</div>
+          <div class="small-note">Next draw: <span id="nextDraw">—</span></div>
+        </div>
+      </div>
+
+      <div style="margin-top:10px;flex:1;display:flex;flex-direction:column;overflow:hidden">
+        <div id="ticketGrid" class="ticket-grid" role="grid" aria-label="Ticket selection grid"></div>
+      </div>
+    </div>
+
+    <!-- right: leaderboard + rules short -->
+    <div class="glass">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><strong>Leaderboard</strong><div class="small-note">Top players (fake)</div></div>
+        <div><button id="clearLb" class="btn btn-ghost">Clear</button></div>
+      </div>
+
+      <div style="margin-top:12px" id="leaderboard">
+        <!-- fake leaderboard entries -->
+      </div>
+
+      <div style="margin-top:16px">
+        <strong>Game Rules</strong>
+        <div class="small-note" style="margin-top:6px">Click "📜 Rules" for the full rules. Quick summary: watch ads to gain tickets, use tickets to claim numbers (1 ticket per number), winners are drawn at scheduled times.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- footer / existing content continues -->
+  <section style="margin-top:28px;">
+    <!-- keep the rest of your original page content (pricing, screenshots, admin panels, etc.) unchanged -->
+    <!-- ... -->
+  </section>
+
+</main>
+
+<!-- Rules Modal -->
+<div class="rules-modal" id="rulesModal" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="rules-inner animate__animated animate__zoomIn">
+    <button id="closeRules" class="btn btn-ghost" style="float:right">Close</button>
+    <h3>Game Rules — Quick & Clear</h3>
+    <ul>
+      <li>Watch an ad to receive <strong>1 Ticket 🎟️</strong>. (Max 5 ads/hour.)</li>
+      <li>Each Ticket lets you claim a spot (any number) from <strong>1 to 1000</strong>.</li>
+      <li>Click any available number on the board to claim it — it costs 1 ticket.</li>
+      <li>Click a number you claimed to unclaim it; you will be refunded 1 ticket.</li>
+      <li>Numbers already purchased by others are disabled (grey) and cannot be claimed.</li>
+      <li>When the draw runs, a random winner is selected from the claimed numbers. The winner's reward is added to <strong>Total Earnings</strong>.</li>
+    </ul>
+  </div>
+</div>
+
+<!-- Congrats popup & confetti canvas -->
+<div id="congrats" class="congrats" aria-hidden="true"><div class="box" id="congratsBox"></div></div>
+<canvas id="confetti"></canvas>
+  
+  <!-- Ad Overlay (hidden until "Watch Ad" is clicked) -->
+<div id="adOverlay" style="
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.8);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 4000;
+">
+  <div id="adBox" style="
+    background: rgba(20,20,30,0.9);
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  ">
+    <ins class="68dfbb709416763e952cf338" style="display:inline-block;width:300px;height:600px;"></ins>
+    <button id="closeAdBtn" class="btn btn-primary" style="margin-top:10px;">Close Ad</button>
+  </div>
+</div>
+
+<script>
+/* ==================
+   CORE STATE STORAGE
+   ================== */
+const TICKET_COUNT = 1000;
+const MICRO = 1_000_000;
+const TICKET_COST_USDT_MICRO = Math.round(0.0025 * MICRO); // kept for pot calc
+const keys = {
+  userTickets: 'dc_user_tickets_v2',    // array of numbers user selected
+  taken: 'dc_taken_tickets_v2',         // simulated taken by others
+  totalTickets: 'dc_total_tickets_v2',  // number of tickets user owns (earned by ads or admin deposit)
+  totalEarnings: 'dc_total_earnings_v2' // cumulative earnings (from wins)
+};
+const load = (k, d) => { const s = localStorage.getItem(k); return s ? JSON.parse(s) : d; };
+const save = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+
+/* initial state */
+let userTickets = new Set(load(keys.userTickets, [])); // numbers claimed by YOU
+let takenTickets = new Set(load(keys.taken, []));      // numbers taken by other players (simulated)
+let totalTickets = Number(load(keys.totalTickets, 0)); // tickets the user owns (currency replaced)
+let totalEarningsMicro = Number(load(keys.totalEarnings, 0)); // micro-units USDT
+let adQuota = { windowStart: Date.now(), used: 0 }; // per hour
+const MAX_ADS_PER_HOUR = 5;
+
+/* some elements */
+const el = id => document.getElementById(id);
+const totalTicketsEl = el('totalTickets');
+const totalEarningsEl = el('totalEarnings');
+const ticketGrid = el('ticketGrid');
+const yourChips = el('yourChips');
+const selectedCountEl = el('selectedCount');
+const adQuotaEl = el('adQuota');
+const potStr = el('potStr');
+const leaderboardEl = el('leaderboard');
+const confCanvas = el('confetti');
+const congratsBox = el('congratsBox');
+const activityText = el('activityText');
+const activityFeed = el('activityFeed');
+const bgLayer = el('bgLayer');
+
+/* ============
+   Utility funcs
+   ============ */
+function toUSDT(micro){ return (Number(micro) / MICRO).toFixed(6) + ' USDT'; }
+function saveAll(){ save(keys.userTickets, Array.from(userTickets)); save(keys.taken, Array.from(takenTickets)); save(keys.totalTickets, totalTickets); save(keys.totalEarnings, totalEarningsMicro); }
+
+/* =====================
+   WebAudio: micro sounds
+   ===================== */
+let audioCtx = null, audioUnlocked = false;
+function ensureAudio(){
+  if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+function unlockAudio(){ if(audioUnlocked) return; try{ ensureAudio(); if(audioCtx.state==='suspended') audioCtx.resume(); const buf = audioCtx.createBuffer(1,1,22050); const src = audioCtx.createBufferSource(); src.buffer = buf; src.connect(audioCtx.destination); src.start(0); src.stop(0); audioUnlocked = true; }catch(e){} }
+document.addEventListener('click', ()=>unlockAudio(), { once:true });
+document.addEventListener('touchstart', ()=>unlockAudio(), { once:true });
+
+function createOsc(type,freq,start,dur,gain=0.06,pan=0){
+  const c = ensureAudio();
+  const osc = c.createOscillator();
+  const g = c.createGain();
+  osc.type = type; osc.frequency.setValueAtTime(freq, c.currentTime + start);
+  g.gain.setValueAtTime(0.0001, c.currentTime + start);
+  g.gain.linearRampToValueAtTime(gain, c.currentTime + start + 0.006);
+  g.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + start + dur - 0.02);
+  osc.connect(g); g.connect(c.destination);
+  osc.start(c.currentTime + start); osc.stop(c.currentTime + start + dur);
+  return osc;
+}
+
+function playClick(){
+  if(!audioUnlocked) return;
+  try{
+    createOsc('sine',900,0,0.14,0.06);
+    createOsc('triangle',1200,0.02,0.12,0.03);
+  }catch(e){}
+}
+
+function playSwish(){
+  if(!audioUnlocked) return;
+  try{
+    createOsc('sine',1200,0,0.12,0.02);
+    createOsc('sine',860,0.02,0.14,0.02);
+  }catch(e){}
+}
+
+function playIntroSound(){
+  if(!audioUnlocked) return;
+  try{
+    createOsc('sine',80,0,1.2,0.06);
+    createOsc('sawtooth',220,0.08,1.1,0.035);
+  }catch(e){}
+}
+
+/* ====================
+   Confetti animation
+   ==================== */
+const ctx = confCanvas.getContext('2d');
+function resizeConf(){ confCanvas.width = innerWidth; confCanvas.height = innerHeight; }
+resizeConf(); window.addEventListener('resize', resizeConf);
+let confPieces = [], confAnim = null;
+function spawnConfetti(n=80){
+  confPieces = []; for(let i=0;i<n;i++){
+    confPieces.push({ x: innerWidth/2 + (Math.random()-0.5)*300, y: innerHeight/2 + (Math.random()-0.5)*80, vx: -6 + Math.random()*12, vy: -8 + Math.random()*14, r: 6 + Math.random()*12, rot: Math.random()*360, vr: -8 + Math.random()*16, color: `hsl(${Math.floor(Math.random()*360)},80%,55%)` });
+  }
+  if(confAnim) cancelAnimationFrame(confAnim);
+  (function frame(){ ctx.clearRect(0,0,confCanvas.width,confCanvas.height); for(const p of confPieces){ p.x+=p.vx; p.y+=p.vy; p.vy += 0.18; p.rot += p.vr; ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180); ctx.fillStyle=p.color; ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*0.6); ctx.restore(); } confPieces = confPieces.filter(p=>p.y < confCanvas.height + 200); if(confPieces.length) confAnim = requestAnimationFrame(frame); else { ctx.clearRect(0,0,confCanvas.width,confCanvas.height); confAnim = null; } })();
+}
+
+/* =====================
+   Activity Feed
+   ===================== */
+const fakeNames = ['@CryptoLion','@BitBoss','@LuckyWhale','@MoonRider','@DeFiQueen','@TokenKing','@SatoshiJoe','@GalaxyQueen','@NFTShark','@WhaleHunter'];
+const feedPool = [
+  (n)=>`🎟️ ${n} grabbed ${Math.ceil(Math.random()*25)} tickets!`,
+  (n)=>`💰 ${n} earned a win!`,
+  (n)=>`🔥 ${n} bought ${Math.ceil(Math.random()*100)} tickets — odds rising!`,
+  (n)=>`🎉 ${n} joined the draw!`,
+  (n)=>`🏆 ${n} hit the leaderboard!`,
+  (n)=>`💎 ${Math.ceil(Math.random()*950)} tickets sold — hurry!`,
+  (n)=>`⚡ ${n} deposited ${(Math.random()*5+0.5).toFixed(3)} USDT`
+];
+function randomFeedMessage(){
+  const name = fakeNames[Math.floor(Math.random()*fakeNames.length)];
+  const tpl = feedPool[Math.floor(Math.random()*feedPool.length)];
+  return tpl(name);
+}
+let feedInterval = null;
+function startFeedRotation(){
+  if(feedInterval) return;
+  // initial message already present
+  feedInterval = setInterval(()=>{ showFeed(randomFeedMessage()); }, 4500);
+}
+function showFeed(msg){
+  playSwish();
+  gsap.to(activityText, { opacity:0, x:-12, duration:0.28, ease:'power1.in', onComplete: ()=>{
+    activityText.innerHTML = `<span class="activity-accent">${msg.split(' ')[0]}</span> ${msg.replace(/^[^ ]+ /,'')}`;
+    gsap.fromTo(activityText, { opacity:0, x:12 }, { opacity:1, x:0, duration:0.5, ease:'power3.out' });
+  }});
+}
+
+/* =====================
+   Render & UI functions
+   ===================== */
+function renderStats(){
+  totalTicketsEl.textContent = totalTickets;
+  totalEarningsEl.textContent = toUSDT(totalEarningsMicro);
+  potStr.textContent = toUSDT( ownersCount() * TICKET_COST_USDT_MICRO ); // pot based on owners
+  renderAdQuota();
+}
+function ownersCount(){ return takenTickets.size + userTickets.size; }
+
+/* render your selected chips */
+function renderYourChips(){
+  yourChips.innerHTML = '';
+  const arr = Array.from(userTickets).sort((a,b)=>a-b);
+  selectedCountEl.textContent = arr.length;
+  for(const n of arr){
+    const btn = document.createElement('div');
+    btn.className = 'ticket-chip';
+    btn.textContent = `#${n}`;
+    // clicking chip unselects
+    btn.addEventListener('click', ()=>{ toggleClaim(n); });
+    yourChips.appendChild(btn);
+  }
+}
+
+/* render ticket grid (1..1000) */
+function renderTicketGrid(){
+  ticketGrid.innerHTML = '';
+  const fragment = document.createDocumentFragment();
+  for(let i=1;i<=TICKET_COUNT;i++){
+    const d = document.createElement('div');
+    d.className = 'ticket';
+    d.textContent = i;
+    d.dataset.num = i;
+    // statuses
+    if(takenTickets.has(i) && !userTickets.has(i)){
+      d.classList.add('disabled'); // bought by others
+    } else if(userTickets.has(i)){
+      d.classList.add('selected');
+    }
+    // click behavior
+    d.addEventListener('click', ()=>{ handleTicketClick(i); });
+    fragment.appendChild(d);
+  }
+  ticketGrid.appendChild(fragment);
+}
+
+/* render leaderboard (fake) */
+function renderLeaderboard(){
+  const names = ['@CryptoLion','@BitBoss','@LuckyWhale','@MoonRider','@DeFiQueen','@TokenKing','@SatoshiJoe','@GalaxyQueen','@NFTShark','@WhaleHunter'];
+  leaderboardEl.innerHTML = '';
+  for(let i=0;i<7;i++){
+    const row = document.createElement('div');
+    row.style.display='flex'; row.style.justifyContent='space-between'; row.style.padding='8px 6px'; row.style.borderBottom='1px dashed rgba(255,255,255,0.03)';
+    const name = names[Math.floor(Math.random()*names.length)];
+    const amt = (Math.random()*5+0.2).toFixed(4);
+    row.innerHTML = `<div><strong>#${i+1}</strong> <span style="margin-left:8px">${name}</span></div><div>${amt} USDT</div>`;
+    leaderboardEl.appendChild(row);
+  }
+}
+
+/* update ad quota text */
+function renderAdQuota(){
+  // reset hourly window if needed
+  const now = Date.now();
+  if(!adQuota.windowStart || now - adQuota.windowStart >= 3600_000){ adQuota.windowStart = now; adQuota.used = 0; }
+  adQuotaEl.textContent = `Ads left: ${Math.max(0, MAX_ADS_PER_HOUR - (adQuota.used||0))}/hour`;
+}
+
+/* =========================
+   Ticket claim / unclaim logic
+   ========================= */
+function canClaim(){
+  return totalTickets > 0;
+}
+function toggleClaim(n){ handleTicketClick(n); } // helper used by chips
+
+function handleTicketClick(n){
+  // if taken by others -> denied
+  if(takenTickets.has(n) && !userTickets.has(n)){ // disabled
+    // flash a micro message
+    const elSel = ticketGrid.querySelector(`.ticket[data-num='${n}']`);
+    if(elSel) gsap.fromTo(elSel, {scale:1},{scale:1.03, duration:0.09, yoyo:true, repeat:1});
+    showFeed(`⚠️ Spot #${n} already taken`);
+    playClick();
+    return;
+  }
+  // if user already claimed -> unclaim -> refund
+  if(userTickets.has(n)){
+    // unclaim
+    userTickets.delete(n);
+    totalTickets += 1; // refund 1 ticket
+    saveAll();
+    renderTicketGrid(); renderYourChips(); renderStats();
+    playClick();
+    // small congrats-ish unclaim animation
+    gsap.fromTo(congratsBox, {opacity:0, y:-8}, {opacity:1, y:0, duration:0.28, onComplete: ()=>gsap.to(congratsBox, {opacity:0, delay:1.2, duration:0.4})});
+    showFeed(`↩️ You refunded #${n}`);
+    return;
+  }
+  // else claim: require at least 1 user ticket
+  if(!canClaim()){
+    alert('You do not have enough tickets. Watch an ad to earn tickets.');
+    return;
+  }
+  // claim
+  userTickets.add(n);
+  totalTickets -= 1; // spend 1 ticket
+  // play sound and confetti small
+  playClick();
+  gsap.fromTo(congratsBox, {opacity:0, scale:0.9}, {opacity:1, scale:1, duration:0.45, ease:'back.out(1.4)'});
+  congratsBox.innerHTML = `<div style="font-weight:800;color:#ffd773">🎉 You claimed #${n}</div><div style="font-size:12px;color:#eaf6ff;margin-top:6px">Your odds are increasing — buy more tickets!</div>`;
+  setTimeout(()=>{ gsap.to(congratsBox, {opacity:0, scale:0.9, duration:0.45}); congratsBox.innerHTML=''; }, 2400);
+  spawnConfetti(24);
+  saveAll();
+  renderTicketGrid(); renderYourChips(); renderStats();
+  showFeed(`🎟️ You claimed #${n}`);
+}
+
+/* Admin-style auto pick next available */
+function autoPickNext(){
+  for(let i=1;i<=TICKET_COUNT;i++){
+    if(!takenTickets.has(i) && !userTickets.has(i)){
+      if(!canClaim()){ alert('Not enough tickets to auto-pick'); return; }
+      handleTicketClick(i);
+      return;
+    }
+  }
+  alert('No available spots left.');
+}
+
+/* Clear my picks */
+function clearMyPicks(){
+  if(userTickets.size === 0) return;
+  // refund all
+  const count = userTickets.size;
+  totalTickets += count;
+  userTickets.clear();
+  saveAll();
+  renderTicketGrid(); renderYourChips(); renderStats();
+  playClick();
+  showFeed(`🧼 You cleared ${count} picks`);
+}
+
+/* ===================
+   Ad logic (watch ad => +1 ticket)
+   =================== */
+function getAdState(){
+  const now = Date.now();
+  if(!adQuota.windowStart || now - adQuota.windowStart >= 3600_000){ adQuota = { windowStart: now, used: 0 }; }
+  return { left: Math.max(0, MAX_ADS_PER_HOUR - (adQuota.used||0)), data: adQuota };
+}
+function watchAd() {
+  const s = getAdState();
+  if (s.left <= 0) {
+    alert('Ad limit reached for this hour');
+    return;
+  }
+
+  loadAdScript(); // load ad network JS (if not loaded yet)
+  const overlay = document.getElementById('adOverlay');
+  overlay.style.display = 'flex'; // show ad
+
+  const closeBtn = document.getElementById('closeAdBtn');
+  let adDuration = 10; // 10 seconds minimum watch time
+  closeBtn.disabled = true;
+  closeBtn.textContent = `Please wait ${adDuration}s...`;
+
+  const countdown = setInterval(() => {
+    adDuration--;
+    if (adDuration > 0) {
+      closeBtn.textContent = `Please wait ${adDuration}s...`;
+    } else {
+      clearInterval(countdown);
+      closeBtn.textContent = "Close Ad";
+      closeBtn.disabled = false;
+    }
+  }, 1000);
+
+  closeBtn.onclick = () => {
+    overlay.style.display = 'none';
+    totalTickets += 1;
+    adQuota.used = (adQuota.used || 0) + 1;
+    adQuota.windowStart = adQuota.windowStart || Date.now();
+    saveAll();
+    renderStats();
+    spawnConfetti(18);
+    playClick();
+    showFeed(`🎁 You earned +1 ticket`);
+  };
+}
+/* ===========================
+   Simulate draw / pick winner
+   (test-only, uncomment button to enable)
+   =========================== */
+function pickWinner(){
+  // combine all claimed numbers (user + taken) into owners list
+  const owners = [];
+  for(const n of userTickets) owners.push({name:'You', ticket:n});
+  for(const n of takenTickets) owners.push({name:'Other', ticket:n});
+  if(owners.length === 0){ alert('No tickets claimed — round cancelled'); return; }
+  const idx = Math.floor(Math.random() * owners.length);
+  const winner = owners[idx];
+  const potMicro = owners.length * TICKET_COST_USDT_MICRO;
+  // announce
+  spawnConfetti(160);
+  gsap.fromTo(congratsBox, {opacity:0, scale:0.9}, {opacity:1, scale:1, duration:0.6});
+  congratsBox.innerHTML = `<div style="font-weight:900;color:#ffd773">Winner: ${winner.name} — #${winner.ticket}</div><div style="font-size:12px;margin-top:6px">${toUSDT(potMicro)}</div>`;
+  setTimeout(()=>{ gsap.to(congratsBox, {opacity:0, duration:0.6}); congratsBox.innerHTML=''; }, 4200);
+  // add to earnings if you won
+  if(winner.name === 'You'){ totalEarningsMicro += potMicro; saveAll(); renderStats(); alert(`You won ${toUSDT(potMicro)} — added to Total Earnings`); showFeed(`🏆 You won ${toUSDT(potMicro)}!`); }
+  else { showFeed(`🏆 ${winner.name} won ${toUSDT(potMicro)}`); }
+  // after draw, reset board (for demo)
+  takenTickets.clear();
+  userTickets.clear();
+  totalTickets = 0;
+  saveAll();
+  renderTicketGrid(); renderYourChips(); renderStats();
+}
+
+/* =====================
+   Simulate other players
+   ===================== */
+function populateSimulatedTaken(count = 60){
+  // random spread across board
+  takenTickets.clear();
+  while(takenTickets.size < count){
+    const n = Math.floor(Math.random()*TICKET_COUNT)+1;
+    // avoid clashing with user's picks
+    if(!userTickets.has(n)) takenTickets.add(n);
+  }
+  saveAll();
+  renderTicketGrid(); renderStats();
+}
+
+/* ======================
+   Upload background (testing)
+   ====================== */
+/* REMOVE LATER: temporary set background upload */
+/*el('setBgBtn').addEventListener('click', ()=> el('bgFile').click());
+el('bgFile').addEventListener('change', e=>{
+  const f = e.target.files && e.target.files[0];
+  if(!f) return;
+  const r = new FileReader();
+  r.onload = ev=>{
+    bgLayer.style.backgroundImage = `url('${ev.target.result}')`;
+    bgLayer.style.backgroundSize = 'cover';
+    bgLayer.style.backgroundPosition = 'center';
+    // slight zoom effect
+   /* bgLayer.style.transform = 'scale(1.02)';
+    setTimeout(()=> bgLayer.style.transform = '', 700);
+    showFeed('🖼 Background updated (test)');
+  };
+  r.readAsDataURL(f);
+});*/
+
+/* ======================
+   Wire up UI interactions
+   ====================== */
+el('watchAdBtn').addEventListener('click', ()=>{ playClick(); watchAd(); });
+el('autoPickBtn').addEventListener('click', ()=>{ playClick(); autoPickNext(); });
+el('clearMyBtn').addEventListener('click', ()=>{ if(confirm('Clear your picks and refund tickets?')) { playClick(); clearMyPicks(); } });
+
+el('rulesBtn').addEventListener('click', ()=>{ el('rulesModal').style.display='flex'; el('rulesModal').setAttribute('aria-hidden','false'); playClick(); });
+el('closeRules').addEventListener('click', ()=>{ el('rulesModal').style.display='none'; el('rulesModal').setAttribute('aria-hidden','true'); playClick(); });
+
+el('clearLb').addEventListener('click', ()=>{ playClick(); renderLeaderboard(); });
+
+el('muteBtn').addEventListener('click', function(){
+  // simple toggle icon (sound uses WebAudio so no global audio pause)
+  const i = this.querySelector('i');
+  if(i) {
+    if(i.classList.contains('fa-volume-up')){ i.classList.remove('fa-volume-up'); i.classList.add('fa-volume-mute'); }
+    else { i.classList.remove('fa-volume-mute'); i.classList.add('fa-volume-up'); }
+  }
+  playClick();
+});
+
+/* attach click sound to all .btn as micro-interaction (delegated once) */
+document.addEventListener('click', (ev)=>{
+  const b = ev.target.closest && ev.target.closest('.btn');
+  if(b && !b.classList.contains('icon-btn')) { /* icon-btn still gets sound by specific handlers */ playClick(); }
+}, true);
+
+/* =========================
+   Splash animation (auto-play 5s)
+   ========================= */
+function runSplash(){
+  const f = el('splashFortune'), t = el('splashTicket'), title = el('splashTitle'), splash = el('splash');
+  gsap.set([f,t,title], {opacity:0});
+  gsap.set(f, {x:-600, y:-10});
+  gsap.set(t,{x:600, y:10});
+  gsap.set(title,{scale:0.96,opacity:0});
+  // entry
+  gsap.to(f, {x:0, opacity:1, duration:0.82, ease:'power3.out'});
+  gsap.to(t, {x:0, opacity:1, duration:0.82, ease:'power3.out', delay:0.08});
+  gsap.to(title, {opacity:1, scale:1.06, duration:0.9, delay:0.9, ease:'elastic.out(1.1,0.45)'});
+  // sparkle/confetti and sound a little after
+  setTimeout(()=>{ spawnConfetti(90); playIntroSound(); }, 1100);
+  // remove after 5s
+  setTimeout(()=>{ gsap.to(splash, { opacity:0, duration:0.6, onComplete: ()=> { const s = el('splash'); if(s) s.remove(); } }); }, 5000);
+}
+
+/* =========================
+   Initial render & bootstrap
+   ========================= */
+function init(){
+  // ensure some simulated taken tickets
+  if(load(keys.taken, null) === null){
+    // pick 60 random taken
+    for(let i=0;i<60;i++){ takenTickets.add(Math.floor(Math.random()*TICKET_COUNT)+1); }
+    saveAll();
+  } else {
+    // load sets already
+    takenTickets = new Set(load(keys.taken, []));
+  }
+  // load userTickets etc
+  userTickets = new Set(load(keys.userTickets, []));
+  totalTickets = Number(load(keys.totalTickets, totalTickets));
+  totalEarningsMicro = Number(load(keys.totalEarnings, totalEarningsMicro));
+
+  renderTicketGrid();
+  renderYourChips();
+  renderLeaderboard();
+  renderStats();
+  startFeedRotation();
+  runSplash();
+
+  // auto-scroll to next available ticket (vertical only)
+  const mo = new MutationObserver(()=>{
+    const next = Array.from(document.querySelectorAll('.ticket')).find(d=>!d.classList.contains('disabled') && !d.classList.contains('selected'));
+    if(next) next.scrollIntoView({behavior:'smooth', block:'center'});
+  });
+  mo.observe(ticketGrid, { childList:true, subtree:true });
+}
+
+init();
+
+/* ===========================
+   Small accessibility helpers
+   =========================== */
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape'){ el('rulesModal').style.display='none'; el('rulesModal').setAttribute('aria-hidden','true'); }
+});
+
+/* expose for console testing */
+window._dc = {
+  userTickets, takenTickets, totalTickets, totalEarningsMicro,
+  claim: (n)=>handleTicketClick(n),
+  autoPick: autoPickNext,
+  simulateWin: pickWinner,
+  populateTaken: populateSimulatedTaken,
+  saveAll
+};
+  function loadAdScript() {
+  if (window.adScriptLoaded) return; // only load once
+  const s = document.createElement('script');
+  s.src = "https://cdn.bmcdn6.com/js/68dfbb709416763e952cf338.js?v=" + Date.now();
+  s.async = true;
+  s.onload = () => console.log('Ad script loaded.');
+  document.body.appendChild(s);
+  window.adScriptLoaded = true;
+}
+</script>
+</body>
+</html>

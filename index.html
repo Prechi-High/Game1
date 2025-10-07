@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -35,6 +33,369 @@ background-repeat:no-repaet;background-attachment:fixed} /* prevent horizontal s
 /* Fortune Ticket glow effect */
   
   /* --- App feel + layout lock --- */
+
+
+.fortune,
+.ticket-word {
+  text-shadow:
+    0 0 12px rgba(191,163,255,0.8),
+    0 0 24px rgba(191,163,255,0.6),
+    0 0 48px rgba(191,163,255,0.4);
+  animation: glowPulse 2.6s ease-in-out infinite alternate;
+}
+
+@keyframes glowPulse {
+  0% { text-shadow: 0 0 8px rgba(191,163,255,0.4), 0 0 16px rgba(191,163,255,0.3); }
+  100% { text-shadow: 0 0 16px rgba(191,163,255,0.8), 0 0 32px rgba(191,163,255,0.6); }
+}/* === Fix center alignment and horizontal spacing === */
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  padding-left: max(10px, env(safe-area-inset-left));
+  padding-right: max(10px, env(safe-area-inset-right));
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100%, 1fr));
+  gap: 14px;
+  width: 100%;
+  max-width: 950px;
+  margin: 0 auto;
+  padding: 0 0;
+  box-sizing: border-box;
+}
+@media (min-width: 760px) {
+  .grid {
+    grid-template-columns: 360px 1fr 320px; /* restore layout for larger screens */
+  }
+}
+@media (max-width: 480px) {
+  .grid {
+    width: 100%;
+    padding: 0 8px;
+  }
+}
+/* Prevent horizontal scroll overflow */
+body, html {
+  overflow-x: hidden !important;
+}
+/* Background */
+.bg-animation{position:fixed;inset:0;background:z-index:-2;background-size:cover;background-position:center}
+.bg-animation::before{content:'';position:absolute;inset:0;background:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><radialGradient id="grad" cx="50%" cy=[...]
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-20px)}}
+
+/* Activity feed (fixed top, centered) */
+.activity-wrap{position:fixed;left:50%;transform:translateX(-50%);top:14px;z-index:1100;width:92%;max-width:920px;pointer-events:none}
+.activity-feed{pointer-events:auto;background:linear-gradient(90deg, rgba(255,215,120,0.04), rgba(124,58,237,0.03));border:1px solid rgba(255,255,255,0.04);backdrop-filter:blur(8px);padding:10px 14px;[...]
+.activity-text{font-weight:700;font-size:14px;color:#eaf6ff;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.activity-accent{background:linear-gradient(90deg,#ffd773,#bfa3ff);-webkit-background-clip:text;color:transparent;font-weight:900;padding-right:8px}
+
+/* Header */
+.header{background:rgba(10,10,10,0.0);backdrop-filter:blur(12px);position:fixed;top:50px;left:0;right:0;z-index:1050;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+.nav{display:block;align-items:center;gap:12px;justify-content:space-between}
+.logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff;font-weight:700;margin-bottom:10px}
+.diamond-icon{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(45deg,#ff6b6b,#ffd93d,#4ecdc4);box-shadow:0 6px 18px rgba(255,1[...]
+.header-right{display:flex;gap:10px;align-items:center}
+
+/* Stats pill (new): Total Tickets & Earnings */
+.stats-pill{display:flex;gap:12px;align-items:center;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));padding:8px 12px;border-radius:12px;border:1px solid rgba(255,255,[...]
+.stat{display:flex;flex-direction:column;align-items:flex-start}
+.stat strong{font-size:1.05rem}
+.stat small{font-size:.72rem;opacity:.8}
+.stat .icon{margin-right:8px}
+
+/* Buttons */
+.btn{color:white;padding:10px 18px;border-radius:999px;border:none;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:8px}
+.btn-primary{background:linear-gradient(45deg,#ff6b6b,#ffd93d);color:#04121a;box-shadow:0 8px 30px rgba(255,107,107,0.14)}
+.btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:#fff}
+.icon-btn{background:transparent;border:1px solid rgba(255,255,255,0.06);padding:8px;border-radius:10px}
+
+/* Layout content padding to account for header */
+.main-pad{padding-top:260px;box-sizing:border-box;}
+
+/* Game area layout - keep original style but add panels */
+
+@media(min-width:1000px){.grid{grid-template-columns:360px 1fr 320px}}
+
+/* Panels */
+.glass{background:rgba(10,10,10,0.0);border-radius:12px;padding:12px 10px;border:1px solid rgba(255,255,255,0.04);backdrop-filter:blur(8px) ;position:relative}
+.small-note{font-size:12px;color:#cfeefc}
+
+/* Ticket grid */
+.ticket-grid{display:grid;gap:8px;padding:8px 0;overflow:hidden;height:420px;grid-template-columns:repeat(7, minmax(36px,1fr))} /* mobile-first 8 columns */
+@media(min-width:480px){ .ticket-grid{grid-template-columns:repeat(10,minmax(40px,1fr))} }
+@media(min-width:760px){ .ticket-grid{grid-template-columns:repeat(14,minmax(42px,1fr))} }
+@media(min-width:1000px){ .ticket-grid{grid-template-columns:repeat(20,minmax(44px,1fr))} }
+
+.ticket{height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:800;background:linear-gradient(180deg,#ffffff,#dff8f4);color:#022;cursor:pointer;user-select:n[...]
+.ticket.taken{background:linear-gradient(180deg,#222a30,#12181b);color:#b9eaf0;cursor:default;opacity:0.9}
+.ticket.selected{background:linear-gradient(135deg,#ffd773, #bfa3ff);color:#04121a;box-shadow:0 10px 30px rgba(190,130,255,0.12);transform:translateY(-4px)}
+.ticket.disabled{background:linear-gradient(180deg,#555,#3a3a3a);color:#ddd;cursor:not-allowed;opacity:0.6}
+
+/* Your Tickets box */
+.your-tickets{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.your-tickets .chips{display:flex;flex-wrap:wrap;gap:8px}
+.ticket-chip{padding:6px 10px;border-radius:8px;background:linear-gradient(90deg,#ffd773,#bfa3ff);color:#04121a;font-weight:800;font-size:13px;box-shadow:0 6px 20px rgba(190,130,255,0.08);cursor:point[...]
+
+/* Rules modal */
+.rules-modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:2000}
+.rules-inner{background:linear-gradient(180deg,rgba(10,10,10,0.98),rgba(8,8,12,0.98));padding:20px;border-radius:12px;max-width:520px;width:92%;border:1px solid rgba(255,255,255,0.04)}
+.rules-inner h3{margin-bottom:8px;color:#ffd93d}
+.rules-inner ul{margin-left:18px;color:#e6eef8;line-height:1.6}
+
+/* congrats popup */
+.congrats{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);z-index:2500;pointer-events:none;min-width:220px;text-align:center}
+.congrats .box{background:linear-gradient(180deg,rgba(255,255,255,0.03),rgba(0,0,0,0.06));padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04)}
+
+/* splash (fortune ticket intro) */
+.splash{position:absolute;top:200px;inset:0;display:flex;align-items:center;justify-content:center;z-index:2005;pointer-events:none}
+.splash-inner{position:relative;width:92%;max-width:920px;height:260px;border-radius:18px;display:flex;align-items:center;justify-content:center;overflow:visible;pointer-events:none}
+.splash-word{position:absolute;font-weight:900;font-size:64px;opacity:0;pointer-events:none;text-transform:uppercase;letter-spacing:2px}
+.fortune{left:6%;color:black;-webkit-background-clip:text;background:linear-gradient(90deg,#ffd773,#fff4b2); text-shadow:0 6px 28px rgba(255,184,0,0.12);padding:40px;}
+.ticket-word{right:6%;color:purple;-webkit-background-clip:text;background:linear-gradient(90deg,#bfa3ff,#7c3aed); text-shadow:0 6px 28px rgba(124,58,237,0.12);padding:8px;bottom:20%}
+.splash-title{position:relative;z-index:5;font-weight:900;font-size:36px;color:#eee;-webkit-background-clip:text;background:linear-gradient(90deg,#ffd773,#7c3aed);opacity:0;letter-spacing:2px}
+
+/* Confetti canvas */
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:2400}
+
+/* Footer spacing */
+.footer{margin-top:30px;padding:40px 0}
+
+/* Responsive micro */
+@media(max-width:560px){ .stat strong{font-size:1rem} .ticket{height:36px;font-size:11px} .ticket-grid{gap:6px} .header{padding:10px 0} .splash-word{font-size:36px} .splash-title{font-size:22px} }
+
+/* logo visual */
+.logo-visual{width:52px;height:52px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:linear-gradient(90deg,#ffd773,#bfa3ff);box-shadow:0 8px 24px rgba(255,184,0,0.1[...]
+
+/* small helper */
+.hidden{display:none!important}
+  #ticketGrid {
+  background: rgba(255, 255, 255, 0.03);
+  height: 540px;
+  overflow-y: auto;
+}
+
+/* New: ad-sequence overlay styles */
+#adOverlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 4000; }
+#adBox { width: 360px; max-width: 92%; background: rgba(20,20,30,0.98); border-radius: 12px; padding: 12px; box-shadow: 0 8px 40px rgba(0,0,0,0.6); color: #eaf6ff; display:flex; flex-direction:column; gap:10px; align-items:center; }
+#adFrame { width: 300px; height: 170px; background: linear-gradient(180deg,#111,#222); border-radius:8px; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
+#adIndicator { font-weight:800; color:#ffd773; }
+.ad-countdown { font-weight:700; color:#bfefff; }
+.ad-next { position:absolute; right:10px; bottom:8px; background: rgba(255,255,255,0.03); border-radius:8px; padding:6px; cursor:pointer; border: 1px solid rgba(255,255,255,0.04); color:#fff }
+.ad-next.disabled { opacity:0.35; pointer-events:none; }
+.ad-close { margin-top:8px; }
+
+/* Confirmation modal */
+#confirmClaimModal, #noTicketModal { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; z-index: 4500; }
+.claim-inner { background: linear-gradient(180deg, rgba(10,10,10,0.98), rgba(8,8,12,0.98)); padding: 18px; border-radius: 12px; width: 92%; max-width: 420px; border: 1px solid rgba(255,255,255,0.04); color: #eaf6ff; text-align:center; }
+.claim-number { display:inline-block; margin: 12px 0; padding: 10px 14px; border-radius: 10px; background: linear-gradient(90deg,#ffd773,#bfa3ff); color:#04121a; font-weight:900; font-size:20px; box-shadow:0 8px 30px rgba(190,130,255,0.08); }
+.claim-actions { display:flex; gap:12px; justify-content:center; margin-top:10px; }
+.claim-actions .btn { min-width:110px; }
+.deposit-note { font-size:13px; color:#cfeefc; margin-top:8px; }
+
+/* disable pointer on chips (no unclaim) */
+.ticket-chip{pointer-events:none}
+
+/* small next icon */
+.next-icon { font-size:14px; display:inline-block; transform: translateY(1px); }
+</style>
+</head>
+<body>
+
+<div class="bg-animation" id="bgLayer" aria-hidden="true"></div>
+
+<!-- Activity feed (top) -->
+<div class="activity-wrap">
+  <div class="activity-feed" id="activityFeed">
+    <div class="activity-text" id="activityText"><span class="activity-accent">Welcome!</span> Fortune Ticket — Ready to play</div>
+  </div>
+</div>
+
+<!-- Header -->
+<header class="header">
+  <div class="container">
+    <nav class="nav">
+      <a href="#" class="logo">
+              
+          
+        <div class="logo-visual" aria-hidden="true"><i class="fas fa-ticket-alt" style="font-size:20px;color:black"></i></div>
+        Fortune Ticket
+              <div class="header-right">
+          <!-- REMOVE LATER: Set Background (testing) -->
+          <button class="btn btn-ghost" id="muteBtn" title="Mute / Unmute"><i class="fas fa-volume-up"></i></button>
+         
+          <button class="btn icon-btn" id="rulesBtn" title="Game Rules">📜 Rules</button>
+        </div>
+      </a>
+           
+      <div style="display:block;gap:12px;align-items:center">
+        <!-- New stats pill with Total Tickets & Total Earnings -->
+        <div class="stats-pill" aria-hidden="false">
+          <div class="stat" style="display:flex;align-items:center;gap:8px">
+            <div class="icon" aria-hidden="true"><i class="fas fa-ticket-alt" style="color:#ffd773"></i></div>
+            <div>
+              <small style="display:block;color:#cfeefc">Total Tickets</small>
+              <strong id="totalTickets">0</strong>
+            </div>
+          </div>
+
+          <div style="width:1px;height:36px;background:rgba(255,255,255,0.03)"></div>
+
+          <div class="stat" style="display:flex;align-items:center;gap:8px">
+            <div class="icon" aria-hidden="true"><i class="fas fa-coins" style="color:#bfa3ff"></i></div>
+            <div>
+              <small style="display:block;color:#cfeefc">Total Earnings</small>
+              <strong id="totalEarnings">0.000000 USDT</strong>
+            </div>
+          </div>
+        </div>
+
+   
+      </div>
+    </nav>
+  </div>
+</header>
+
+<!-- splash / intro -->
+<div class="splash" id="splash">
+  <div class="splash-inner">
+    <div class="splash-word fortune" id="splashFortune">Fortune</div>
+    <div class="splash-word ticket-word" id="splashTicket">Ticket</div>
+    <!--  <div class="splash-title" id="splashTitle">Win Big!!!</div> -->
+  </div>
+</div>
+
+<!-- main content -->
+<main class="main-pad container" role="main">
+
+  <div class="grid">
+
+    <!-- left: controls -->
+    <div class="glass">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <strong>Controls</strong>
+          <div class="small-note">Watch ads to earn tickets — use tickets to claim numbers</div>
+        </div>
+        <div style="text-align:right"><small class="small-note">Round <strong id="roundId">1</strong></small></div>
+      </div>
+
+      <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-primary" id="watchAdBtn">Watch Ads ▶ +1 Ticket (3 ads)</button>
+        <button class="btn btn-primary" id="autoPickBtn">Auto Pick Next</button>
+        <button class="btn btn-ghost" id="clearMyBtn" title="Clearing purchased tickets not allowed" disabled>Clear My Picks</button>
+      </div>
+
+      <div style="margin-top:14px">
+        <div style="font-weight:700;margin-bottom:8px">Your Tickets</div>
+        <div class="your-tickets">
+          <div id="yourCount" style="font-size:13px;color:#cfeefc">Selected: <strong id="selectedCount">0</strong></div>
+          <div class="chips" id="yourChips" aria-live="polite" style="margin-top:8px"></div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <div style="font-weight:700;margin-bottom:6px">Ad Quota</div>
+        <div id="adQuota" class="small-note">Ads left: 5/hour</div>
+      </div>
+
+      <div style="margin-top:18px;"><small class="small-note">*Click a number on the board to claim it (cost: 1 ticket). Once bought, a ticket cannot be refunded.</small></div>
+
+    </div>
+
+    <!-- center: ticket board -->
+    <div class="glass" style="min-height:540px;display:flex;flex-direction:column">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <strong>Ticket Board</strong>
+          <div class="small-note">Pick any number (1–1000)</div>
+        </div>
+        <div style="text-align:right">
+          <div class="small-note">Pot: <strong id="potStr">0.000000</strong> USDT</div>
+          <div class="small-note">Next draw: <span id="nextDraw">—</span></div>
+        </div>
+      </div>
+
+      <div style="margin-top:10px;flex:1;display:flex;flex-direction:column;overflow:hidden">
+        <div id="ticketGrid" class="ticket-grid" role="grid" aria-label="Ticket selection grid"></div>
+      </div>
+    </div>
+
+    <!-- right: leaderboard + rules short -->
+    <div class="glass">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div><strong>Leaderboard</strong><div class="small-note">Top players (fake)</div></div>
+        <div><button id="clearLb" class="btn btn-ghost">Clear</button></div>
+      </div>
+
+      <div style="margin-top:12px" id="leaderboard">
+        <!-- fake leaderboard entries -->
+      </div>
+
+      <div style="margin-top:16px">
+        <strong>Game Rules</strong>
+        <div class="small-note" style="margin-top:6px">Click "📜 Rules" for the full rules. Quick summary: watch ads to gain tickets, use tickets to claim numbers (1 ticket per number), winners are [...]
+      </div>
+    </div>
+
+  </div>
+
+  <!-- footer / existing content continues -->
+  <section style="margin-top:28px;">
+    <!-- keep the rest of your original page content (pricing, screenshots, admin panels, etc.) unchanged -->
+    <!-- ... -->
+  </section>
+
+</main>
+
+<!-- Rules Modal -->
+<div class="rules-modal" id="rulesModal" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="rules-inner animate__animated animate__zoomIn">
+    <button id="closeRules" class="btn btn-ghost" style="float:right">Close</button>
+    <h3>Game Rules — Quick & Clear</h3>
+    <ul>
+      <li>Watch an ad to receive <strong>1 Ticket 🎟️</strong>. (Max 5 ads/hour.)</li>
+      <li>Each Ticket lets you claim a spot (any number) from <strong>1 to 1000</strong>.</li>
+      <li>Click any available number on the board to claim it — it costs 1 ticket.</li>
+      <li>Click a number you claimed to unclaim it; you will be refunded 1 ticket.</li>
+      <li>Numbers already purchased by others are disabled (grey) and cannot be claimed.</li>
+      <li>When the draw runs, a random winner is selected from the claimed numbers. The winner's reward is added to <strong>Total Earnings</strong>.</li>
+    </ul>
+    <div style="margin-top:8px;color:#ffd773;font-size:13px">Updated: New flows require 3 consecutive ads to earn 1 ticket, and tickets are non-refundable once purchased.</div>
+  </div>
+</div>
+
+<!-- Confirm claim modal -->
+<div id="confirmClaimModal" aria-hidden="true">
+  <div class="claim-inner animate__animated animate__zoomIn">
+    <div style="text-align:right"><button id="closeConfirm" class="btn btn-ghost">Close</button></div>
+    <h3 style="color:#ffd773">Confirm Purchase</h3>
+    <div style="margin-top:6px;color:#eaf6ff">Do you want to spend <strong>1 ticket</strong> to claim this number?</div>
+    <div id="confirmNumber" class="claim-number">#0</div>
+    <div class="claim-actions">
+      <button id="confirmBuyBtn" class="btn btn-primary">Confirm</button>
+      <button id="cancelBuyBtn" class="btn btn-ghost">Cancel</button>
+    </div>
+    <div class="deposit-note">Note: Purchased tickets cannot be refunded.</div>
+  </div>
+</div>
+
+<!-- No-ticket modal -->
+<div id="noTicketModal" aria-hidden="true">
+  <div class="claim-inner animate__animated animate__zoomIn">
+    <div style="text-align:right"><button id="closeNoTicket" class="btn btn-ghost">Close</button></div>
+    <h3 style="color:#ffd773">No Tickets</h3>
+    <div style="margin-top:6px;color:#eaf6ff">You don't have any tickets to claim this spot.</div>
+    <div style="margin-top:12px;display:flex;gap:12px;justify-content:center">
+      <button id="startAdSequenceBtn" class="btn btn-primary">Watch 3 Ads → +1 Ticket</button>
+      <button id="depositBtn" class="btn btn-ghost">Deposit 0.1 USDT → +5 Tickets</button>
+    </div>
+    <div class="deposit-note">Note: Users may earn up to 5 tickets from ads and up to 5  /* --- App feel + layout lock --- */
 
 
 .fortune,
